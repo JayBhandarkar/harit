@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 const API_KEY    = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!;
-const BACKEND    = process.env.NEXT_PUBLIC_API_URL!; // http://localhost:5000/api
+const BACKEND    = '/api';
 
 interface Park {
   id: string;

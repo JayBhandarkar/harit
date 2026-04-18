@@ -7,7 +7,7 @@ import {
   CloudRain, Cloud, CloudSnow, Zap, CheckCircle,
 } from 'lucide-react';
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL!;
+const BACKEND = '/api';
 
 interface ParkWeather {
   name:        string;
