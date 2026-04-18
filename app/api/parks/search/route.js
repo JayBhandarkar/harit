@@ -1,9 +1,6 @@
-const express = require('express');
-const router = express.Router();
-
 const PLACES_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
-// Delhi parks near Indraprastha Park as static fallback
+// Delhi parks as static fallback
 const DELHI_FALLBACK_PARKS = [
   { id: 'delhi_001', name: 'Indraprastha Park', address: 'Ring Road, ITO, New Delhi, Delhi 110002', rating: 4.3, userRatingCount: 2841, openNow: true, lat: 28.6289, lng: 77.2488 },
   { id: 'delhi_002', name: 'Lodhi Garden', address: 'Lodhi Road, New Delhi, Delhi 110003', rating: 4.6, userRatingCount: 52341, openNow: true, lat: 28.5931, lng: 77.2197 },
@@ -35,62 +32,24 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Nearby parks
-router.get('/nearby', async (req, res) => {
-  const { lat, lng, radius = 2000 } = req.query;
-  if (!lat || !lng) return res.status(400).json({ message: 'lat and lng required' });
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const query = searchParams.get('query');
 
-  const userLat = parseFloat(lat);
-  const userLng = parseFloat(lng);
-  const rad     = parseInt(radius);
-
-  // Try Google Places API first
-  if (PLACES_API_KEY) {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${userLat},${userLng}&radius=${rad}&type=park&key=${PLACES_API_KEY}`;
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data.status === 'OK' && data.results?.length > 0) {
-        const parks = data.results.map((p) => ({
-          id: p.place_id,
-          name: p.name,
-          address: p.vicinity,
-          rating: p.rating,
-          userRatingCount: p.user_ratings_total,
-          openNow: p.opening_hours?.open_now,
-          lat: p.geometry.location.lat,
-          lng: p.geometry.location.lng,
-          photo: p.photos?.[0]?.photo_reference || null,
-        }));
-        return res.json({ parks, source: 'google' });
-      }
-    } catch (err) {
-      console.error('Google Places API error:', err.message);
-    }
+  if (!query) {
+    return Response.json({ message: 'query required' }, { status: 400 });
   }
 
-  // Fallback: return Delhi parks sorted by distance from user
-  const fallback = DELHI_FALLBACK_PARKS
-    .map((p) => ({ ...p, distance: getDistanceKm(userLat, userLng, p.lat, p.lng) }))
-    .sort((a, b) => a.distance - b.distance);
-
-  res.json({ parks: fallback, source: 'fallback', note: 'Showing Delhi parks (API unavailable)' });
-});
-
-// Text search
-router.get('/search', async (req, res) => {
-  const { query, lat, lng } = req.query;
-  if (!query) return res.status(400).json({ message: 'query required' });
-
-  const q       = query.toString().toLowerCase().trim();
-  const userLat = lat ? parseFloat(lat) : 28.6289;
-  const userLng = lng ? parseFloat(lng) : 77.2488;
+  const q = query.toLowerCase().trim();
+  const userLat = parseFloat(searchParams.get('lat') || '28.6289');
+  const userLng = parseFloat(searchParams.get('lng') || '77.2488');
 
   // Try Google Places text search first
   if (PLACES_API_KEY) {
     try {
-      const location = lat && lng ? `&location=${userLat},${userLng}&radius=30000` : '';
+      const location = searchParams.get('lat') && searchParams.get('lng')
+        ? `&location=${userLat},${userLng}&radius=30000`
+        : '';
       const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q + ' park Delhi')}&type=park${location}&key=${PLACES_API_KEY}`;
       const response = await fetch(url);
       const data = await response.json();
@@ -107,7 +66,7 @@ router.get('/search', async (req, res) => {
           lng: p.geometry.location.lng,
           photo: p.photos?.[0]?.photo_reference || null,
         }));
-        return res.json({ parks, source: 'google' });
+        return Response.json({ parks, source: 'google' });
       }
     } catch (err) {
       console.error('Google Places search error:', err.message);
@@ -132,7 +91,5 @@ router.get('/search', async (req, res) => {
         distance: getDistanceKm(userLat, userLng, p.lat, p.lng),
       })).sort((a, b) => a.distance - b.distance);
 
-  res.json({ parks: results, source: 'fallback', note: `Showing Delhi parks matching "${q}"` });
-});
-
-module.exports = router;
+  return Response.json({ parks: results, source: 'fallback', note: `Showing Delhi parks matching "${q}"` });
+}

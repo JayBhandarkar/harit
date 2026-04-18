@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const sosSchema = new mongoose.Schema({
   citizen: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -16,4 +16,5 @@ const sosSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('SOS', sosSchema);
+const SOS = mongoose.models.SOS || mongoose.model('SOS', sosSchema);
+export default SOS;

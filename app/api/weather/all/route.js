@@ -1,6 +1,3 @@
-const express = require('express');
-const router  = express.Router();
-
 const WEATHER_KEY = process.env.WEATHER_API_KEY;
 
 const PARKS = [
@@ -20,10 +17,10 @@ const FALLBACK = [
   { name: 'Talkatora Garden', temp: 32, feels_like: 35, humidity: 57, wind_speed: 12, description: 'partly cloudy', icon: '02d', visibility: 7,  pressure: 1008, clouds: 30, uvi: 5.2 },
 ];
 
-router.get('/all', async (req, res) => {
+export async function GET() {
   // If no API key configured, return fallback immediately
   if (!WEATHER_KEY || WEATHER_KEY === 'your_weather_api_key') {
-    return res.json({ parks: FALLBACK, source: 'fallback' });
+    return Response.json({ parks: FALLBACK, source: 'fallback' });
   }
 
   try {
@@ -55,12 +52,10 @@ router.get('/all', async (req, res) => {
       })
     );
 
-    res.json({ parks: results, source: 'live' });
+    return Response.json({ parks: results, source: 'live' });
   } catch (err) {
     console.error('Weather API error:', err.message);
     // Return fallback with error info so frontend knows
-    res.json({ parks: FALLBACK, source: 'fallback', error: err.message });
+    return Response.json({ parks: FALLBACK, source: 'fallback', error: err.message });
   }
-});
-
-module.exports = router;
+}

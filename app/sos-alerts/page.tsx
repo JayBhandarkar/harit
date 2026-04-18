@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Siren, MapPin, Clock, CheckCircle, AlertTriangle,
@@ -8,7 +8,6 @@ import {
 import { ROLES, User as UserType } from '@/lib/roles';
 import Sidebar from '@/components/Sidebar';
 import api from '@/lib/api';
-import { connectSocket, disconnectSocket } from '@/lib/socket';
 import toast from 'react-hot-toast';
 
 interface SOSAlert {
@@ -36,6 +35,17 @@ export default function SOSAlertsPage() {
   const [filter, setFilter]       = useState<'all' | 'active' | 'acknowledged' | 'resolved'>('all');
   const [newCount, setNewCount]   = useState(0);
 
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const { data } = await api.get('/sos');
+      setAlerts(data.alerts);
+    } catch (err: any) {
+      toast.error('Failed to load alerts');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (!stored) { router.push('/login'); return; }
@@ -46,54 +56,17 @@ export default function SOSAlertsPage() {
     // Load existing alerts
     fetchAlerts();
 
-    // Connect socket and join role room
-    const socket = connectSocket(u.role);
+    // Poll for new alerts every 10 seconds
+    const interval = setInterval(fetchAlerts, 10000);
 
-    socket.on('sos:new', (sos: SOSAlert) => {
-      setAlerts((prev) => [sos, ...prev]);
-      setNewCount((c) => c + 1);
-      // Play alert sound + toast
-      toast.custom((t) => (
-        <div className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl ${t.visible ? 'animate-enter' : 'animate-leave'}`}
-          style={{ background: '#1a0a0a', border: '1px solid rgba(248,113,113,0.4)', minWidth: '300px' }}>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse"
-            style={{ background: 'rgba(248,113,113,0.2)' }}>
-            <Siren className="w-4 h-4 text-red-400" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-red-400">🚨 SOS Alert!</p>
-            <p className="text-xs text-gray-400">{sos.citizenName} — {sos.location.address}</p>
-          </div>
-        </div>
-      ), { duration: 8000 });
-    });
-
-    socket.on('sos:updated', (updated: SOSAlert) => {
-      setAlerts((prev) => prev.map((a) => a._id === updated._id ? updated : a));
-    });
-
-    return () => {
-      socket.off('sos:new');
-      socket.off('sos:updated');
-      disconnectSocket();
-    };
-  }, [router]);
-
-  const fetchAlerts = async () => {
-    try {
-      const { data } = await api.get('/sos');
-      setAlerts(data.alerts);
-    } catch (err: any) {
-      toast.error('Failed to load alerts');
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => clearInterval(interval);
+  }, [router, fetchAlerts]);
 
   const acknowledge = async (id: string) => {
     try {
       await api.patch(`/sos/${id}/acknowledge`);
       toast.success('Alert acknowledged');
+      fetchAlerts();
     } catch { toast.error('Failed to acknowledge'); }
   };
 
@@ -101,6 +74,7 @@ export default function SOSAlertsPage() {
     try {
       await api.patch(`/sos/${id}/resolve`);
       toast.success('Alert resolved');
+      fetchAlerts();
     } catch { toast.error('Failed to resolve'); }
   };
 

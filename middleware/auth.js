@@ -1,22 +1,46 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import connectDB from '../config/db.js';
 
-const protect = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'Not authorized' });
+/**
+ * Extract and verify the authenticated user from a Next.js Request object.
+ * Returns the user document (minus password) or null if not authenticated.
+ */
+export async function getAuthUser(request) {
+  const authHeader = request.headers.get('authorization');
+  const token = authHeader?.split(' ')[1];
+  if (!token) return null;
+
   try {
+    await connectDB();
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select('-password');
-    next();
+    const user = await User.findById(decoded.id).select('-password');
+    return user;
   } catch {
-    res.status(401).json({ message: 'Token invalid' });
+    return null;
   }
-};
+}
 
-const authorize = (...roles) => (req, res, next) => {
-  if (!roles.includes(req.user.role))
-    return res.status(403).json({ message: 'Access denied' });
-  next();
-};
+/**
+ * Require authentication. Returns a Response if unauthorized, or the user if OK.
+ */
+export async function requireAuth(request) {
+  const user = await getAuthUser(request);
+  if (!user) {
+    return { error: Response.json({ message: 'Not authorized' }, { status: 401 }) };
+  }
+  return { user };
+}
 
-module.exports = { protect, authorize };
+/**
+ * Require authentication + specific role(s).
+ */
+export async function requireRole(request, ...roles) {
+  const result = await requireAuth(request);
+  if (result.error) return result;
+
+  if (!roles.includes(result.user.role)) {
+    return { error: Response.json({ message: 'Access denied' }, { status: 403 }) };
+  }
+  return result;
+}

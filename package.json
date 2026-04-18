@@ -2,36 +2,31 @@
   "name": "greenspace-platform",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently \"nodemon server.js\" \"next dev --port 3000\"",
+    "dev": "next dev",
     "build": "next build",
-    "start": "node server.js"
+    "start": "next start",
+    "seed": "node seed.js"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.460.0",
     "mongoose": "^8.0.3",
     "next": "^15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hot-toast": "^2.4.1",
-    "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3"
+    "react-hot-toast": "^2.4.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "concurrently": "^8.2.2",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
-    "nodemon": "^3.0.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
