@@ -52,7 +52,6 @@ const sidebarConfig: Record<Role, {
       {
         heading: 'Eco & Fun',
         items: [
-          { icon: Sprout,        label: 'EcoPassport' },
           { icon: Glasses,       label: 'AR Experiences' },
           { icon: Star,          label: 'My Favourites' },
         ],
