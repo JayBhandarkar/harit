@@ -44,7 +44,6 @@ const sidebarConfig: Record<Role, {
         heading: 'Park Life',
         items: [
           { icon: Navigation,   label: 'Real-Time Park Data' },
-          { icon: BookOpen,     label: 'Park Booking ⭐',     badge: 'New' },
           { icon: CalendarDays, label: 'Events',              badge: '3' },
           { icon: Map,          label: 'Safety Map' },
           { icon: Siren,        label: 'SOS Alert',           badge: '🚨' },
@@ -210,7 +209,7 @@ const NAV_ROUTES: Record<string, string> = {
   'Safety Map':             '/safety-map',
   'SOS Alert':              '/sos',
   'EcoPassport':            '/ecopassport',
-  'AR Experiences':         '/ecopassport',
+  'AR Experiences':         '/ar-experiences',
   'My Favourites':          '/nearby-parks',
   'Feedback & Reports':     '/feedback',
   'Language & Offline':     '/settings',

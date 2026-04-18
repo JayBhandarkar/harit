@@ -36,6 +36,30 @@ function LoginForm() {
 
   const activeRole = ROLES.find((r) => r.value === selectedRole)!;
 
+  const DEMO_USERS: Record<Role, { email: string; password: string }> = {
+    citizen:           { email: 'citizen@demo.com',     password: 'Demo@1234' },
+    admin:             { email: 'admin@demo.com',       password: 'Demo@1234' },
+    maintenance_staff: { email: 'maintenance@demo.com', password: 'Demo@1234' },
+    event_organizer:   { email: 'organizer@demo.com',   password: 'Demo@1234' },
+  };
+
+  const demoLogin = async (role: Role) => {
+    setSelectedRole(role);
+    setLoading(true);
+    try {
+      const { email, password } = DEMO_USERS[role];
+      const { data } = await api.post('/auth/login', { email, password, role });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      toast.success(`Welcome, ${data.user.name}!`);
+      router.push('/dashboard');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Demo login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex overflow-hidden" style={{ background: 'var(--bg-base)' }}>
 
@@ -152,6 +176,22 @@ function LoginForm() {
               )}
             </button>
           </form>
+
+          {/* Demo login */}
+          <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+            <p className="text-xs font-medium uppercase tracking-wider mb-2.5 text-center" style={{ color: 'var(--text-muted)' }}>Quick Demo Login</p>
+            <div className="grid grid-cols-2 gap-2">
+              {ROLES.map((role) => (
+                <button key={role.value} type="button" disabled={loading}
+                  onClick={() => demoLogin(role.value)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                  style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', color: 'var(--text-secondary)' }}>
+                  <span>{role.icon}</span>
+                  <span>{role.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="mt-6 pt-6 text-center" style={{ borderTop: '1px solid var(--border-subtle)' }}>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>

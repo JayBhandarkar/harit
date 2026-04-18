@@ -1,5 +1,5 @@
 'use client';
-import { MapPin, CalendarDays, Leaf, Siren, Star, Clock, Wind, Droplets, Sun, TrendingUp, Shield, Bell, ChevronRight, Navigation } from 'lucide-react';
+import { MapPin, CalendarDays, Leaf, Siren, Star, Clock, Wind, Droplets, Sun, TrendingUp, Shield, Bell, ChevronRight, Navigation, Scan } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const stats = [
@@ -52,6 +52,11 @@ export default function CitizenDashboard({ user }: { user: any }) {
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5"
             style={{ background: accent, boxShadow: '0 4px 14px rgba(52,211,153,0.3)' }}>
             <MapPin className="w-4 h-4" /> Explore Parks
+          </button>
+          <button onClick={() => router.push('/ar-experiences')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5"
+            style={{ background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}>
+            <Scan className="w-4 h-4" /> AR Explore
           </button>
           <button onClick={() => router.push('/sos')}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5"
